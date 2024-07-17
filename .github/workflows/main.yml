@@ -51,6 +51,9 @@ jobs:
           host: 172.29.40.232
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          retries: 5
+          retry-interval: 30s
           script: |
             docker pull ${{ secrets.DOCKER_USERNAME }}/phayu:latest
             docker stop phayu || true
