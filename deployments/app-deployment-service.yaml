@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: phayu-namespace
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bun-app
+  namespace: phayu-namespace
+spec:
+  type: LoadBalancer # Change to NodePort or ClusterIP if needed
+  ports:
+    - port: 8888
+      targetPort: 8888
+  selector:
+    app: bun-app
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bun-app
+  namespace: phayu-namespace
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: bun-app
+  template:
+    metadata:
+      labels:
+        app: bun-app
+    spec:
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: registry-pull-secret
+      containers:
+        - name: bun-app
+          image: kimsnow/phayu:latest
+          ports:
+            - containerPort: 8888
+          env:
+            - name: DATABASE_URL
+              value: "postgresql://postgres.jgyazpmncibkucygwvuq:Kim_0878744635@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+            - name: DIRECT_URL
+              value: "postgresql://postgres.jgyazpmncibkucygwvuq:Kim_0878744635@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
+          resources:
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+      initContainers:
+        - name: wait-for-postgresql
+          image: busybox
+          command:
+            - "sh"
+            - "-c"
+            - "until nc -z aws-0-ap-southeast-1.pooler.supabase.com 5432; do echo 'waiting for postgresql'; sleep 2; done;"
