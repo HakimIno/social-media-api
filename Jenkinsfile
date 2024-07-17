@@ -10,7 +10,11 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+                script {
+                    retry(3) {
+                        checkout scm
+                    }
+                }
             }
         }
 
@@ -79,7 +83,10 @@ pipeline {
     post {
         always {
             echo 'Cleaning up...'
-            sh 'docker rmi ${DOCKER_IMAGE}:${BUN_VERSION}'
+            script {
+                // Cleanup Docker images
+                sh 'docker rmi ${DOCKER_IMAGE}:${BUN_VERSION} || true'
+            }
         }
         success {
             echo 'Pipeline completed successfully!'
