@@ -42,6 +42,3 @@ ENTRYPOINT ["bun", "run"]
 
 # Override CMD for development
 CMD ["dev"]
-
-# Default CMD for production
-# CMD ["start"]  # Commented out to avoid conflict, use ENTRYPOINT instead
