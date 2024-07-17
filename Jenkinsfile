@@ -12,7 +12,12 @@ pipeline {
             steps {
                 script {
                     retry(3) {
-                        checkout scm
+                        checkout([$class: 'GitSCM',
+                        branches: [[name: '*/main']],
+                        doGenerateSubmoduleConfigurations: false,
+                        extensions: [],
+                        userRemoteConfigs: [[url: 'https://github.com/HakimIno/social-media-api']]
+                    ])
                     }
                 }
             }
