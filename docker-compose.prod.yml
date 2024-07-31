@@ -16,7 +16,7 @@ services:
     container_name: server
     build:
       context: ./
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     ports:
       - '8888:8888'
     environment:
