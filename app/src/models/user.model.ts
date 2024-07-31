@@ -11,6 +11,16 @@ export interface UserTable {
 	is_email_verified: boolean;
 	role: Role;
 }
+export interface UserData {
+	id: number;
+	name: string | null;
+	email: string;
+	password: string | null;
+	is_email_verified: boolean;
+	role: Role;
+}
+
+export type UserWithoutExtras = Omit<UserData, 'password'>;
 
 export class User extends BaseModel implements Selectable<UserTable> {
 	id: number;

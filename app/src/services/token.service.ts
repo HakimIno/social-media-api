@@ -5,22 +5,19 @@ import { Selectable } from "kysely";
 import { Role } from "../config/roles";
 import { TokenType, tokenTypes } from "../config/tokens";
 import { User } from "@prisma/client";
+import { UserWithoutExtras } from "../models/user.model";
 
 export const generateToken = async (
-	userId: number,
 	type: TokenType,
-	role: Role,
 	expires: Dayjs,
 	secret: string,
-	isEmailVerified: boolean,
+	user: UserWithoutExtras, // Expecting the user without extras
 ) => {
 	const payload = {
-		sub: userId.toString(),
+		sub: user.id.toString(),
 		exp: expires.unix(),
 		iat: dayjs().unix(),
 		type,
-		role,
-		isEmailVerified,
 	};
 	return await jwt.sign(payload, String(secret));
 };
@@ -34,13 +31,20 @@ export const generateAuthTokens = async (user: Selectable<User>) => {
 		Number(Bun.env.JWT_ACCESS_EXPIRATION_MINUTES),
 		"minutes",
 	);
+
+	const userData: UserWithoutExtras = {
+		id: Number(user.id),
+		name: user.name,
+		email: user.email,
+		is_email_verified: user.is_email_verified,
+		role: user.role
+	}
+
 	const accessToken = await generateToken(
-		Number(user.id),
 		tokenTypes.ACCESS,
-		user.role,
 		accessTokenExpires,
 		String(Bun.env.JWT_SECRET),
-		user.is_email_verified,
+		userData
 	);
 
 	const refreshTokenExpires = dayjs().add(
@@ -48,12 +52,10 @@ export const generateAuthTokens = async (user: Selectable<User>) => {
 		"days",
 	);
 	const refreshToken = await generateToken(
-		Number(user.id),
 		tokenTypes.REFRESH,
-		user.role,
 		refreshTokenExpires,
 		String(Bun.env.secret),
-		user.is_email_verified,
+		userData
 	);
 
 	return {
@@ -91,13 +93,20 @@ export const generateVerifyEmailToken = async (user: Selectable<User>) => {
 		Number(Bun.env.JWT_VERIFY_EMAIL_EXPIRATION_MINUTES),
 		"minutes",
 	);
+
+	const userData = {
+		id: user.id,
+		name: user.name,
+		email: user.email,
+		is_email_verified: user.is_email_verified,
+		role: user.role
+	} as any
+
 	const verifyEmailToken = await generateToken(
-		user.id,
 		tokenTypes.VERIFY_EMAIL,
-		user.role,
 		expires,
 		String(Bun.env.JWT_SECRET),
-		user.is_email_verified,
+		userData
 	);
 	return verifyEmailToken;
 };
@@ -107,13 +116,19 @@ export const generateResetPasswordToken = async (user: Selectable<User>) => {
 		Number(Bun.env.JWT_RESET_PASSWORD_EXPIRATION_MINUTES),
 		"minutes",
 	);
+	const userData = {
+		id: user.id,
+		name: user.name,
+		email: user.email,
+		is_email_verified: user.is_email_verified,
+		role: user.role
+	} as any
+
 	const resetPasswordToken = await generateToken(
-		user.id,
 		tokenTypes.RESET_PASSWORD,
-		user.role,
 		expires,
 		String(Bun.env.JWT_SECRET),
-		user.is_email_verified,
+		userData
 	);
 	return resetPasswordToken;
 };

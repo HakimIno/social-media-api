@@ -20,5 +20,5 @@ export const login: Handler<Environment> = async (c) => {
 	const { email, password } = authValidation.login.parse(bodyParse);
 	const user = await authService.loginUserWithEmailAndPassword(email, password);
 	const tokens = await tokenService.generateAuthTokens(user as User);
-	return c.json({ user, tokens }, httpStatus.OK as StatusCode);
+	return c.json({ tokens }, httpStatus.OK as StatusCode);
 };

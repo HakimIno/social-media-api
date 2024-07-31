@@ -45,6 +45,9 @@ jobs:
     needs: build
 
     steps:
+      - name: Checkout code (if applicable)
+        uses: actions/checkout@v3
+
       - name: Deploy to server
         uses: appleboy/ssh-action@v0.1.4
         with:
@@ -52,8 +55,6 @@ jobs:
           username: root
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-          retries: 5
-          retry-interval: 30s
           script: |
             docker pull ${{ secrets.DOCKER_USERNAME }}/phayu:latest
             docker stop phayu || true
