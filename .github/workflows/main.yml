@@ -41,7 +41,7 @@ jobs:
           tags: ${{ secrets.DOCKER_USERNAME }}/phayu:latest
 
   deploy:
-    runs-on: ubuntu:22.04
+    runs-on: ubuntu-latest
     needs: build
 
     steps:
