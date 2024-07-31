@@ -1,68 +1,3 @@
-# name: CI/CD Pipeline
-
-# on:
-#   push:
-#     branches:
-#       - main
-#   pull_request:
-#     branches:
-#       - main
-
-# jobs:
-#   build:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       - name: Checkout repository
-#         uses: actions/checkout@v2
-
-#       - name: Set up Docker Buildx
-#         uses: docker/setup-buildx-action@v1
-
-#       - name: Cache Docker layers
-#         uses: actions/cache@v2
-#         with:
-#           path: /tmp/.buildx-cache
-#           key: ${{ runner.os }}-buildx-${{ github.sha }}
-#           restore-keys: |
-#             ${{ runner.os }}-buildx-
-
-#       - name: Login to DockerHub
-#         uses: docker/login-action@v2
-#         with:
-#           username: ${{ secrets.DOCKER_USERNAME }}
-#           password: ${{ secrets.DOCKER_PASSWORD }}
-
-#       - name: Build and push Docker image
-#         uses: docker/build-push-action@v2
-#         with:
-#           context: .
-#           push: true
-#           tags: ${{ secrets.DOCKER_USERNAME }}/phayu:latest
-
-#   deploy:
-#     runs-on: ubuntu-latest
-#     needs: build
-
-#     steps:
-#       - name: Checkout code (if applicable)
-#         uses: actions/checkout@v3
-
-#       - name: Deploy to server using password
-#         uses: appleboy/ssh-action@v0.1.4
-#         with:
-#           host: ${{ secrets.SERVER_HOST }}
-#           username: ${{ secrets.SERVER_USERNAME }}
-#           password: ${{ secrets.SERVER_PASSWORD }}
-#           port: 22
-#           script: docker compose -f docker-compose.prod.yml up -d
-#           # script: |
-#           #   docker pull ${{ secrets.DOCKER_USERNAME }}/phayu:latest
-#           #   docker stop phayu || true
-#           #   docker rm phayu || true
-#           #   docker run -d -p 8888:8888 --name phayu ${{ secrets.DOCKER_USERNAME }}/phayu:latest
-#           debug: true
-
 name: CI/CD Pipeline
 
 on:
@@ -79,13 +14,13 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v1
 
       - name: Cache Docker layers
-        uses: actions/cache@v3
+        uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ github.sha }}
@@ -110,16 +45,18 @@ jobs:
     needs: build
 
     steps:
-      - name: Checkout code
+      - name: Checkout code (if applicable)
         uses: actions/checkout@v3
 
-      - name: Deploy using Docker Compose
-        uses: appleboy/ssh-action@v0.1.5
+      - name: Deploy to server using password
+        uses: appleboy/ssh-action@v0.1.4
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_PASSWORD }}
           port: 22
           script: |
-            docker-compose -f docker-compose.prod.yml up -d
-          debug: true
+            docker pull ${{ secrets.DOCKER_USERNAME }}/phayu:latest
+            docker stop phayu || true
+            docker rm phayu || true
+            docker run -d -p 8888:8888 --name phayu ${{ secrets.DOCKER_USERNAME }}/phayu:latest
