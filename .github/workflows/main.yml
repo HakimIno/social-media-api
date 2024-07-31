@@ -60,3 +60,4 @@ jobs:
             docker stop phayu || true
             docker rm phayu || true
             docker run -d -p 8888:8888 --name phayu ${{ secrets.DOCKER_USERNAME }}/phayu:latest
+          debug: true

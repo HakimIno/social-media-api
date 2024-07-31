@@ -31,19 +31,16 @@ RUN bun prisma migrate deploy
 RUN bun prisma generate
 
 # Define the final stage
-FROM base
+FROM nginx:alpine
+
+# Copy Nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copy the build artifacts from the build stage
 COPY --from=build /app /app
 
 # Expose the port on which the application will run
-EXPOSE 8888
+EXPOSE 80
 
-# Set NODE_ENV to production for the final image
-ENV NODE_ENV=production
-
-# Set the default executable
-ENTRYPOINT ["bun", "run"]
-
-# Override the default command with a development script
-CMD ["dev"]
+# Set default command to run Nginx
+CMD ["nginx", "-g", "daemon off;"]
