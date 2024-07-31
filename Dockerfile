@@ -90,8 +90,5 @@ EXPOSE 80
 # Set environment variable for production
 ENV NODE_ENV="production"
 
-# Use a process manager to run both Nginx and Bun
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-RUN apt-get install -y supervisor
-
-CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Start Nginx and the Bun application
+CMD ["sh", "-c", "nginx -g 'daemon off;' & bun run dev"]
