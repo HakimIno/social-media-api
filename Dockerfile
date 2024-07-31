@@ -1,3 +1,4 @@
+# Base image
 ARG BUN_VERSION=1.1.18
 FROM oven/bun:${BUN_VERSION}-slim as base
 
@@ -27,18 +28,24 @@ COPY --link app/src/prisma ./prisma
 RUN bun prisma migrate deploy
 RUN bun prisma generate
 
+# Nginx setup
 FROM base
+
+# Install Nginx
+RUN apt-get update && apt-get install -y nginx
+
+# Copy Nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copy build artifacts to final image
 COPY --from=build /app /app
 
+# Expose ports
 EXPOSE 8888
+EXPOSE 80
 
 # Set NODE_ENV to production
 ENV NODE_ENV="production"
 
-# Set default executable with ENTRYPOINT
-ENTRYPOINT ["bun", "run"]
-
-# Override CMD for development
-CMD ["dev"]
+# Start Nginx and application
+CMD ["sh", "-c", "service nginx start && bun run dev"]
