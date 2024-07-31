@@ -1,94 +1,49 @@
-# ARG BUN_VERSION=1.1.18
-# FROM oven/bun:${BUN_VERSION}-slim as base
-
-# LABEL fly_launch_runtime="Bun"
-
-# WORKDIR /app
-
-# # Set NODE_ENV to development by default
-# ENV NODE_ENV="development"
-
-# FROM base as build
-
-# # Install dependencies
-# COPY --link bun.lockb package.json ./
-# RUN bun install --ci
-
-# # Copy application code
-# COPY --link . .
-
-# FROM base
-
-# # Copy build artifacts to final image
-# COPY --from=build /app /app
-
-# EXPOSE 8888
-
-# # Set NODE_ENV to production
-# ENV NODE_ENV="production"
-
-# # Set default executable with ENTRYPOINT
-# ENTRYPOINT ["bun", "run"]
-
-# # Override CMD for development
-# CMD ["dev"]
-
-
-# Base image with Bun
+# Define the Bun version to use
 ARG BUN_VERSION=1.1.18
+
+# Use the Bun base image
 FROM oven/bun:${BUN_VERSION}-slim AS base
 
 LABEL fly_launch_runtime="Bun"
 
+# Set the working directory
 WORKDIR /app
 
-# Set environment variable for development
-ENV NODE_ENV="development"
+# Set default NODE_ENV to development
+ENV NODE_ENV=development
 
-# Build stage
+# Define a build stage
 FROM base AS build
 
-# Install dependencies
-COPY --link bun.lockb package.json ./
+# Copy package files and install dependencies
+COPY bun.lockb package.json ./
 RUN bun install --ci
 
-# Install Prisma CLI as development dependency
-RUN bun add -D prisma
+# Install Prisma CLI
+RUN bun add prisma
 
-# Copy application code
-COPY --link . .
+# Copy application code and Prisma files
+COPY . .
+COPY app/src/prisma ./prisma
 
-# Copy Prisma schema and migrations
-COPY --link app/src/prisma ./prisma
+# Run Prisma migrations and generate client
+RUN bun prisma migrate deploy
+RUN bun prisma generate
 
-# Run Prisma migration and generate
-RUN bun prisma migrate deploy && echo "Prisma migrate deploy completed"
-RUN bun prisma generate && echo "Prisma generate completed"
-
-# Final stage with Nginx setup
+# Define the final stage
 FROM base
 
-# Install Nginx
-RUN apt-get update && apt-get install -y nginx curl
-
-# Create log and PID directories with correct permissions
-RUN mkdir -p /var/log/nginx /run/nginx && \
-    chown -R www-data:www-data /var/log/nginx /run/nginx
-
-# Copy Nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Copy build artifacts from the build stage
+# Copy the build artifacts from the build stage
 COPY --from=build /app /app
-COPY --from=build /app/node_modules/.prisma /app/node_modules/.prisma
-COPY --from=build /app/node_modules/.bin /app/node_modules/.bin
 
-# Expose ports for the application and Nginx
+# Expose the port on which the application will run
 EXPOSE 8888
-EXPOSE 80
 
-# Set environment variable for production
-ENV NODE_ENV="production"
+# Set NODE_ENV to production for the final image
+ENV NODE_ENV=production
 
-# Start Nginx and the Bun application
-CMD ["sh", "-c", "nginx -g 'daemon off;' & bun run dev"]
+# Set the default executable
+ENTRYPOINT ["bun", "run"]
+
+# Override the default command with a development script
+CMD ["dev"]
