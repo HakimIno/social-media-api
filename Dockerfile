@@ -14,18 +14,8 @@ FROM base as build
 COPY --link bun.lockb package.json ./
 RUN bun install --ci
 
-# Install Prisma CLI
-RUN bun add prisma
-
 # Copy application code
 COPY --link . .
-
-# Copy Prisma schema and migrations
-COPY --link app/src/prisma ./prisma
-
-# Run Prisma migration and generate
-RUN bun prisma migrate deploy
-RUN bun prisma generate
 
 FROM base
 
