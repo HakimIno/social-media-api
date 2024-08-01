@@ -12,6 +12,9 @@ WORKDIR /app
 # Set default NODE_ENV to development
 ENV NODE_ENV=development
 
+# Define a build stage
+FROM base AS build
+
 # Copy package files and install dependencies
 COPY bun.lockb package.json ./
 RUN bun install --ci
@@ -27,11 +30,23 @@ COPY app/src/prisma ./prisma
 RUN bun prisma migrate deploy
 RUN bun prisma generate
 
+# Define the final stage
+FROM base
+
+# Copy the build artifacts from the build stage
+COPY --from=build /app /app
+
+# Set the working directory
+WORKDIR /app
+
 # Expose the port on which the application will run
 EXPOSE 8888
 
 # Set NODE_ENV to production for the final image
 ENV NODE_ENV=production
 
-# Define the command to run the api-server
-CMD ["bun", "run", "src/index.js"]
+# Set the default executable
+ENTRYPOINT ["bun", "run"]
+
+# Override the default command with a development script
+CMD ["dev"]
