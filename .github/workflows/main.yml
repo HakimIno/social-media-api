@@ -1,75 +1,64 @@
-name: CI/CD Pipeline
+# name: CI/CD Pipeline
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+# on:
+#   push:
+#     branches:
+#       - main
+#   pull_request:
+#     branches:
+#       - main
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v2
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "20"
+#       - name: Set up Docker Buildx
+#         uses: docker/setup-buildx-action@v1
 
-      - name: Install dependencies
-        run: |
-          npm install -g bun
-          bun install
-          npx prisma generate  # Add this line to generate Prisma Client
+#       - name: Cache Docker layers
+#         uses: actions/cache@v2
+#         with:
+#           path: /tmp/.buildx-cache
+#           key: ${{ runner.os }}-buildx-${{ github.sha }}
+#           restore-keys: |
+#             ${{ runner.os }}-buildx-
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+#       - name: Login to DockerHub
+#         uses: docker/login-action@v2
+#         with:
+#           username: ${{ secrets.DOCKER_USERNAME }}
+#           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Cache Docker layers
-        uses: actions/cache@v2
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
+#       - name: Build and push Docker image
+#         uses: docker/build-push-action@v2
+#         with:
+#           context: .
+#           file: ./Dockerfile
+#           push: true
+#           tags: ${{ secrets.DOCKER_USERNAME }}/phayu:latest
 
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+#   deploy:
+#     runs-on: ubuntu-latest
+#     needs: build
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/phayu:latest
+#     steps:
+#       - name: Checkout code (if applicable)
+#         uses: actions/checkout@v3
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Checkout code (if applicable)
-        uses: actions/checkout@v3
-
-      - name: Deploy to server using password
-        uses: appleboy/ssh-action@v0.1.4
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          port: 22
-          script: |
-            docker pull ${{ secrets.DOCKER_USERNAME }}/phayu:latest
-            docker stop phayu || true
-            docker rm phayu || true
-            docker run -d -p 8888:8888 --name phayu ${{ secrets.DOCKER_USERNAME }}/phayu:latest
-          debug: true
+#       - name: Deploy to server using password
+#         uses: appleboy/ssh-action@v0.1.4
+#         with:
+#           host: ${{ secrets.SERVER_HOST }}
+#           username: ${{ secrets.SERVER_USERNAME }}
+#           password: ${{ secrets.SERVER_PASSWORD }}
+#           port: 22
+#           script: |
+#             docker pull ${{ secrets.DOCKER_USERNAME }}/phayu:latest
+#             docker stop phayu || true
+#             docker rm phayu || true
+#             docker run -d -p 8888:8888 --name phayu ${{ secrets.DOCKER_USERNAME }}/phayu:latest
+#           debug: true
