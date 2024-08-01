@@ -12,9 +12,6 @@ WORKDIR /app
 # Set default NODE_ENV to development
 ENV NODE_ENV=development
 
-# Define a build stage
-FROM base AS build
-
 # Copy package files and install dependencies
 COPY bun.lockb package.json ./
 RUN bun install --ci
@@ -30,17 +27,11 @@ COPY app/src/prisma ./prisma
 RUN bun prisma migrate deploy
 RUN bun prisma generate
 
-# Define the final stage
-FROM nginx:alpine
-
-# Copy Nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Copy the build artifacts from the build stage
-COPY --from=build /app /app
-
 # Expose the port on which the application will run
-EXPOSE 80
+EXPOSE 8888
 
-# Set default command to run Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Set NODE_ENV to production for the final image
+ENV NODE_ENV=production
+
+# Define the command to run the api-server
+CMD ["bun", "run", "src/index.js"]

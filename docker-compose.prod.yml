@@ -12,11 +12,8 @@ services:
     networks:
       - backend
 
-  server:
-    container_name: server
-    build:
-      context: ./
-      dockerfile: Dockerfile
+  api-server:
+    image: ${{ secrets.DOCKER_USERNAME }}/phayu:latest
     ports:
       - '8888:8888'
     environment:
