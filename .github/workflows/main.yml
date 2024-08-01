@@ -34,7 +34,8 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v2
+        id: docker_build
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
@@ -60,5 +61,5 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/phayu:latest
             docker stop phayu || true
             docker rm phayu || true
-            docker run -d -p 8888:8888 --name phayu ${{ secrets.DOCKER_USERNAME }}/phayu:latest
+            docker run -d -p 80:80 --name phayu ${{ secrets.DOCKER_USERNAME }}/phayu:latest
           debug: true

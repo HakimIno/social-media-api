@@ -1,3 +1,4 @@
+# Set base image
 ARG BUN_VERSION=1.1.18
 FROM oven/bun:${BUN_VERSION}-slim as base
 
@@ -32,7 +33,13 @@ FROM base
 # Copy build artifacts to final image
 COPY --from=build /app /app
 
-EXPOSE 8888
+# Install Nginx
+RUN apt-get update && apt-get install -y nginx && apt-get clean
+
+# Copy Nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 80
 
 # Set NODE_ENV to production
 ENV NODE_ENV="production"
