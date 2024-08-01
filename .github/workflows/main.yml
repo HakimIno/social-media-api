@@ -124,7 +124,7 @@ jobs:
           script: |
             pwd
             ls -la
-             cd /home/runner/work/social-media-api
+            cd /Users/weerachit/Desktop/socai-backend
             docker-compose -f docker-compose.prod.yml down
             docker-compose -f docker-compose.prod.yml pull
             docker-compose -f docker-compose.prod.yml up -d
